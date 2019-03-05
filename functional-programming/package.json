@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "mine": "node mine.js",
     "test": "mocha || true"
   },
   "author": "",
