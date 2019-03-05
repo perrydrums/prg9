@@ -229,5 +229,6 @@ const tryNonce = async nonce => {
 module.exports = {
   mine: mine,
   toUnicode: toUnicode,
+  splitInArray: splitInArray,
   addArraysTogether: addArraysTogether
 };
