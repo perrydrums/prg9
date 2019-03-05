@@ -138,6 +138,8 @@ const groupArray = (arr, result = [], index = 0) => {
  * Add the values of two arrays together like this:
  * result[index] = arr1[index] + arr2[index]
  *
+ * #assignment: step 4 of Mod10.
+ *
  * @param arr1
  * @param arr2
  * @param result
