@@ -114,11 +114,7 @@ const addNumbers = (arr, number = 0) => {
     return arr;
   }
 
-  arr.push(number.toString());
-
-  number ++;
-
-  return addNumbers(arr, number);
+  return addNumbers(arr.concat(number.toString()), number + 1);
 };
 
 /**
@@ -133,10 +129,10 @@ const groupArray = (arr, result = [], index = 0) => {
     return result;
   }
 
-  result.push(arr.slice(index, index + 10));
+  // Add an array of 10 characters to the final result.
+  const newResult = result.concat(arr.slice(index, index + 10));
 
-  index += 10;
-  return groupArray(arr, result, index);
+  return groupArray(arr, newResult, index + 10);
 };
 
 /**
