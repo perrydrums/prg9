@@ -148,9 +148,9 @@ const addArraysTogether = (arr1, arr2, result = [], index = 0) => {
   if (index === 10) {
     return result;
   }
-  result[index] = (parseInt(arr1[index]) + parseInt(arr2[index])) % 10;
-  index ++;
-  return addArraysTogether(arr1, arr2, result, index);
+  // Add the two numbers together.
+  const sum = (parseInt(arr1[index]) + parseInt(arr2[index])) % 10;
+  return addArraysTogether(arr1, arr2, result.concat(sum), index + 1);
 };
 
 /**
