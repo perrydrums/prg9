@@ -10,6 +10,10 @@ const mine = async (url) => {
     const response = await fetch(url);
     const json = await response.json();
 
+    if (!json.open) {
+      throw new Error('Blockchain closed at the moment, try again in ' + json.countdown + ' ms.');
+    }
+
     // Compose the blockchain string as defined by the Mod10 algorithm guide.
     let blockchainString = json.blockchain.hash;
     for (let i = 0; i < json.blockchain.data.length; i ++) {
