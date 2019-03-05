@@ -1,36 +1,53 @@
+// Modules.
 const fetch = require("node-fetch");
-const url = "http://programmeren9.cmgt.hr.nl:8000/api/blockchain/next";
 const sha256 = require("js-sha256");
 
-const getData = async (url) => {
+const url = "http://programmeren9.cmgt.hr.nl:8000/api/blockchain/next";
+
+const mine = async (url) => {
   try {
+    // Get the most recent block data.
     const response = await fetch(url);
     const json = await response.json();
-    const blockchain = json.blockchain;
-    const string =
-      blockchain.hash +
-      blockchain.data[0].from +
-      blockchain.data[0].to +
-      blockchain.data[0].amount +
-      blockchain.data[0].timestamp +
-      blockchain.timestamp +
-      blockchain.nonce;
-    const transaction = json.transactions[0];
-    const transactionString =
-      transaction.from +
-      transaction.to +
-      transaction.amount +
-      transaction.timestamp +
-      json.timestamp;
+
+    // Compose the blockchain string as defined by the Mod10 algorithm guide.
+    let blockchainString = json.blockchain.hash;
+    for (let i = 0; i < json.blockchain.data.length; i ++) {
+      blockchainString +=
+        json.blockchain.data[i].from +
+        json.blockchain.data[i].to +
+        json.blockchain.data[i].amount +
+        json.blockchain.data[i].timestamp;
+    }
+
+    blockchainString +=
+      json.blockchain.timestamp +
+      json.blockchain.nonce;
+
+    // Compose the transaction string as defined by the Mod10 algorithm guide.
+    let transactionString = '';
+    for (let i = 0; i < json.transactions.length; i ++) {
+      transactionString +=
+        json.transactions[i].from +
+        json.transactions[i].to +
+        json.transactions[i].amount +
+        json.transactions[i].timestamp;
+    }
+    transactionString += json.timestamp;
 
     // let transactionString = 'CMGT Mining CorporationBas BOOTB115487477332611548748101396';
     // string = '000078454c038871fa4d67b0022a30baaf25eaa231f8991b108e2624f052f3f8CMGT Mining CorporationBob PIKAB11548689513858154874778871610312';
 
-    const hash = hashString(string);
+    // Hash the composed string.
+    const hash = hashString(blockchainString);
+
+    // Prepare new string to hash as defined by the Mod10 algorithm guide.
     const newString = hash + transactionString;
 
-    findNonce(newString);
-    return true;
+    // Try to find the nonce. When found, the function outputs SUCCESSFUL.
+    if (await findNonce(newString)) {
+      console.log('SUCCESSFUL!');
+    }
   } catch (error) {
     console.log(error);
   }
@@ -83,11 +100,13 @@ const splitInArray = (str) => {
 
 /**
  * Add extra numbers to the array if the number of entries isn't a multiple of 10.
+ *
+ * @param arr
+ * @param number
+ * @returns array
  */
 const addNumbers = (arr, number = 0) => {
-  const remainder = arr.length % 10;
-  if (remainder === 0) {
-    // Multiple of 10, return array.
+  if (arr.length % 10 === 0) {
     return arr;
   }
 
@@ -141,7 +160,7 @@ const addArraysTogether = (arr1, arr2, result = [], index = 0) => {
  * @param arr
  * @returns {*}
  */
-const addAllArraysTogether = (arr) => {
+const addAllArraysTogether = arr => {
   if (arr.length === 1) {
     return arr;
   }
@@ -157,18 +176,28 @@ const addAllArraysTogether = (arr) => {
  *
  * @param str
  */
-const findNonce = (str) => {
+const findNonce = async str => {
   let index = 0;
   while (index < 100000) {
     const hash = hashString(str + index.toString());
     if (hash.substring(0,4) === '0000') {
-      const success = tryNonce(index);
-      if (success) {
-        return success;
-      }
+      return await tryNonce(index);
     }
     index ++;
   }
+};
+
+/**
+ * Check if the POST request was accepted by the blockchain.
+ *
+ * @param res
+ * @returns boolean
+ */
+const isSuccessful = res => {
+  res.json().then(response => {
+    console.log('Response', response.message);
+    return response.message !== 'nonce not correct';
+  })
 };
 
 /**
@@ -176,21 +205,24 @@ const findNonce = (str) => {
  *
  * @param nonce
  */
-const tryNonce = (nonce) => {
+const tryNonce = async nonce => {
+  // Set request body.
   const body = {
     user: 'Perry Janssen 0924208',
     nonce: nonce,
   };
 
-  fetch('http://programmeren9.cmgt.hr.nl:8000/api/blockchain', {
+  // Set request parameters.
+  const params = {
     method: 'POST',
     body: JSON.stringify(body),
     headers: { 'Content-Type': 'application/json' },
-  }).then(res => {
-    res.json().then(response => {
-      console.log(response);
-    })
-  })
+  };
+
+  // Submit to the blockchain.
+  fetch('http://programmeren9.cmgt.hr.nl:8000/api/blockchain', params)
+    .then(isSuccessful);
 };
 
-getData(url);
+// Mine a CMGT Coin.
+mine(url);
