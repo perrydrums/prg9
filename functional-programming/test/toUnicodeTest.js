@@ -2,7 +2,7 @@ const expect = require('chai').expect;
 const toUnicode = require('../index.js').toUnicode;
 
 describe('toUnicode', () => {
-  it('toUnicode.', () => {
+  it('Convert non numerical characters into ASCII and concatenate all values to one string.', () => {
     // 'text' should be converted to '116101120116' according to the Mod10 algorithm guide.
     // Adding '123' to the string should result in '116101120116123' as numbers shouldn't be converted.
     const string = 'text123';
