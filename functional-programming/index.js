@@ -72,22 +72,19 @@ const hashString = (string) => {
  * @param str
  * @param unicodeStr
  * @param index
- * @returns {*}
+ * @returns string
  */
 const toUnicode = (str, unicodeStr = '', index = 0) => {
-  if (isNaN(str[index])) {
-    const code = str.charCodeAt(index).toString();
-    unicodeStr += code;
-  }
-  else {
-    unicodeStr += str[index];
-  }
-
-  if (index >= str.length - 1) {
+  if (index === str.length) {
     return unicodeStr;
   }
-  index ++;
-  return toUnicode(str, unicodeStr, index);
+
+  if (isNaN(str[index])) {
+    return toUnicode(str, unicodeStr + str.charCodeAt(index).toString(), index + 1);
+  }
+  else {
+    return toUnicode(str, unicodeStr + str[index], index + 1);
+  }
 };
 
 /**
@@ -231,5 +228,6 @@ const tryNonce = async nonce => {
 
 module.exports = {
   mine: mine,
+  toUnicode: toUnicode,
   addArraysTogether: addArraysTogether
 };
