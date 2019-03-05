@@ -113,7 +113,7 @@ const addNumbers = (arr, number = 0) => {
     return arr;
   }
 
-  return addNumbers(arr.concat(number.toString()), number + 1);
+  return addNumbers(arr.concat(number), number + 1);
 };
 
 /**
