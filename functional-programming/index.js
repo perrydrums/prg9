@@ -2,8 +2,6 @@
 const fetch = require("node-fetch");
 const sha256 = require("js-sha256");
 
-const url = "http://programmeren9.cmgt.hr.nl:8000/api/blockchain/next";
-
 const mine = async (url) => {
   try {
     // Get the most recent block data.
@@ -147,7 +145,10 @@ const groupArray = (arr, result = [], index = 0) => {
  * @returns array
  */
 const addArraysTogether = (arr1, arr2, result = [], index = 0) => {
-  if (index === 10) {
+  if (arr1.length !== arr2.length) {
+    throw new Error('arr1 and arr2 are not the same length.');
+  }
+  if (index === arr1.length) {
     return result;
   }
   // Add the two numbers together.
@@ -226,4 +227,9 @@ const tryNonce = async nonce => {
 };
 
 // Mine a CMGT Coin.
-mine(url);
+// mine(url);
+
+module.exports = {
+  mine: mine,
+  addArraysTogether: addArraysTogether
+};
