@@ -129,10 +129,9 @@ const groupArray = (arr, result = [], index = 0) => {
     return result;
   }
 
-  // Add an array of 10 characters to the final result.
-  const newResult = result.concat(arr.slice(index, index + 10));
+  result.push(arr.slice(index, index + 10));
 
-  return groupArray(arr, newResult, index + 10);
+  return groupArray(arr, result, index + 10);
 };
 
 /**
@@ -143,7 +142,7 @@ const groupArray = (arr, result = [], index = 0) => {
  * @param arr2
  * @param result
  * @param index
- * @returns {*}
+ * @returns array
  */
 const addArraysTogether = (arr1, arr2, result = [], index = 0) => {
   if (index === 10) {
