@@ -69,6 +69,8 @@ const hashString = (string) => {
 /**
  * Convert string to unicode decimal numbers.
  *
+ * #assignment: step 1 of Mod10.
+ *
  * @param str
  * @param unicodeStr
  * @param index
@@ -89,6 +91,8 @@ const toUnicode = (str, unicodeStr = '', index = 0) => {
 
 /**
  * Split all characters into an array.
+ *
+ * #assignment: step 2 of Mod10.
  *
  * @param str
  * @returns {string[]}
@@ -230,5 +234,6 @@ module.exports = {
   mine: mine,
   toUnicode: toUnicode,
   splitInArray: splitInArray,
+  hashString: hashString,
   addArraysTogether: addArraysTogether
 };
