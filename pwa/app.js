@@ -32,6 +32,13 @@ const getTags = async () => {
 
 // Build the project HTML.
 const buildProject = project => {
+  if (project.fallback) {
+    return `
+      <div class="project">
+        <h2>${project.message}</h2>
+      </div>
+    `;
+  }
   return `
     <div class="project">
       <h2>${project.title}</h2>
