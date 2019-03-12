@@ -2,6 +2,7 @@ window.addEventListener('load', () => {
   getTags();
   getProjects();
 
+  // Register serviceworker.
   if ('serviceWorker' in navigator) {
     try {
       navigator.serviceWorker.register('service-worker.js');
@@ -13,6 +14,7 @@ window.addEventListener('load', () => {
   }
 });
 
+// Get all projects and place them in the projects container.
 const getProjects = async (tag = '') => {
   const res = await fetch(`http://cmgt.hr.nl:8000/api/projects?tag=${tag}`);
   const json = await res.json();
@@ -20,6 +22,7 @@ const getProjects = async (tag = '') => {
   document.getElementById('projects').innerHTML = json.projects.map(buildProject).join('\n');
 };
 
+// Get all tags and place them in the tags container.
 const getTags = async () => {
   const res = await fetch('http://cmgt.hr.nl:8000/api/projects/tags/');
   const json = await res.json();
@@ -27,6 +30,7 @@ const getTags = async () => {
   document.getElementById('tags').innerHTML += json.tags.map(buildTag).join('\n');
 };
 
+// Build the project HTML.
 const buildProject = project => {
   return `
     <div class="project">
@@ -35,6 +39,7 @@ const buildProject = project => {
   `;
 };
 
+// Build the tag HTML.
 const buildTag = tag => {
   return `
     <li>
