@@ -51,7 +51,8 @@ const buildProject = project => {
   return `
     <div class="project">
       <h2>${project.title}</h2>
-      <div class="headerImage" style="background-image: url(${baseUrl}${project.headerImage})" />
+      <div class="headerImage" style="background-image: url(${baseUrl}${project.headerImage})"></div>
+      <p>${project.description}</p>
     </div>
   `;
 };

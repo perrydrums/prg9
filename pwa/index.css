@@ -2,6 +2,10 @@ h2 {
     font-family: "Helvetica Neue", serif;
 }
 
+p {
+    font-family: "Helvetica Neue", serif;
+}
+
 #main {
     width: 60%;
     margin: 0 auto;
@@ -13,6 +17,10 @@ h2 {
 
 #projects {
     width: 100%;
+}
+
+.project {
+    margin-top: 100px;
 }
 
 .headerImage {
