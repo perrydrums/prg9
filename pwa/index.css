@@ -1,0 +1,23 @@
+h2 {
+    font-family: "Helvetica Neue", serif;
+}
+
+#main {
+    width: 60%;
+    margin: 0 auto;
+}
+
+#tags {
+    width: 100%;
+}
+
+#projects {
+    width: 100%;
+}
+
+.headerImage {
+    width: 100%;
+    height: 200px;
+    background-position: center;
+    background-size: cover;
+}

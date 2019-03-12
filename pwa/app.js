@@ -1,6 +1,15 @@
+// Settings.
+const baseUrl = 'https://cmgt.hr.nl:8000/';
+
+// Register serviceworker and start app.
 window.addEventListener('load', () => {
   getTags();
   getProjects();
+
+  // Get projects whe tag selector updates.
+  document.getElementById('tags').addEventListener('change', event => {
+    getProjects(event.target.value);
+  });
 
   // Register serviceworker.
   if ('serviceWorker' in navigator) {
@@ -16,7 +25,7 @@ window.addEventListener('load', () => {
 
 // Get all projects and place them in the projects container.
 const getProjects = async (tag = '') => {
-  const res = await fetch(`http://cmgt.hr.nl:8000/api/projects?tag=${tag}`);
+  const res = await fetch(`${baseUrl}api/projects?tag=${tag}`);
   const json = await res.json();
 
   document.getElementById('projects').innerHTML = json.projects.map(buildProject).join('\n');
@@ -24,7 +33,7 @@ const getProjects = async (tag = '') => {
 
 // Get all tags and place them in the tags container.
 const getTags = async () => {
-  const res = await fetch('http://cmgt.hr.nl:8000/api/projects/tags/');
+  const res = await fetch(`${baseUrl}api/projects/tags/`);
   const json = await res.json();
 
   document.getElementById('tags').innerHTML += json.tags.map(buildTag).join('\n');
@@ -42,15 +51,15 @@ const buildProject = project => {
   return `
     <div class="project">
       <h2>${project.title}</h2>
+      <div class="headerImage" style="background-image: url(${baseUrl}${project.headerImage})" />
     </div>
   `;
 };
 
 // Build the tag HTML.
 const buildTag = tag => {
+  const capitalized = tag.charAt(0).toUpperCase() + tag.slice(1);
   return `
-    <li>
-      <a onclick="getProjects('${tag}')">${tag}</a>
-    </li>
+    <option value="${tag}">${capitalized}</option>
   `;
 };
