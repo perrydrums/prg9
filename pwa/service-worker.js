@@ -5,8 +5,8 @@ const assets = [
   './fallback.json'
 ];
 
-// Ass static assets to cache.
-self.addEventListener('install', async e => {
+// Add static assets to cache.
+self.addEventListener('install', async event => {
   const cache = await caches.open('app');
   cache.addAll(assets);
 });
@@ -25,12 +25,12 @@ self.addEventListener('fetch', event => {
 });
 
 // If there's cache return it, else try to fetch.
-const cacheFirst = async (request) => {
+const cacheFirst = async request => {
   return await caches.match(request) || fetch(request);
 };
 
 // First try fetching, else check if there's cache.
-const networkFirst = async (request) => {
+const networkFirst = async request => {
   const cache = await caches.open('projects');
 
   try {
