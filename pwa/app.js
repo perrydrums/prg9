@@ -22,11 +22,10 @@ window.addEventListener('load', () => {
   };
   request.onerror = e => console.log('IndexedDB:', 'Error: ' + e.message);
 
-
   getTags();
   getProjects();
 
-  // Get projects whe tag selector updates.
+  // Get projects when tag selector updates.
   document.getElementById('tags').addEventListener('change', event => {
     getProjects(event.target.value);
   });
@@ -56,6 +55,9 @@ const getProjects = async (tag = '') => {
     json.projects.forEach(p => {
       projectOS.add(p);
     });
+
+    document.getElementById('projects').innerHTML = json.projects.map(buildProject).join('\n');
+    return;
   }
   catch (e) {
     console.log('IndexedDB:', 'Offline, getting projects from DB...');
@@ -79,24 +81,10 @@ const getTags = async () => {
   try {
     const res = await fetch(`${baseUrl}api/projects/tags/`);
     const json = await res.json();
-
-    console.log('IndexedDB:', 'Online, saving tags to DB...');
-    const transaction = db.transaction('tags', 'readwrite');
-    const tagsOS = transaction.objectStore('tags');
-
-    json.tags.forEach(t => {
-      tagsOS.add(t, t);
-    });
+    document.getElementById('tags').innerHTML += json.tags.map(buildTag).join('\n');
   }
   catch (e) {
-    console.log('IndexedDB:', 'Offline, getting tags from DB...');
-  }
-
-  const transaction = db.transaction('tags', 'readonly');
-  const tagsOS = transaction.objectStore('tags');
-
-  tagsOS.getAll().onsuccess = e => {
-    document.getElementById('tags').innerHTML += e.target.result.map(buildTag).join('\n');
+    document.getElementById('tags-container').innerHTML = 'Verbind met het internet om de tags op te halen.'
   }
 };
 

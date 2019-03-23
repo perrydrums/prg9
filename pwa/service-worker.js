@@ -5,6 +5,7 @@ const assets = [
   './',
   './app.js',
   './index.css',
+  './images/placeholder.gif',
 ];
 
 self.addEventListener('install', async event => {
