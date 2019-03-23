@@ -8,10 +8,27 @@ const assets = [
   './images/placeholder.gif',
 ];
 
+const expectedCaches = [
+  'app-' + version,
+];
+
 self.addEventListener('install', async event => {
   // Add static assets to cache.
   const cache = await caches.open('app-' + version);
   cache.addAll(assets);
+});
+
+// Deletes caches that aren't in the expectedCaches array.
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.map(key => {
+        if (!expectedCaches.includes(key)) {
+          return caches.delete(key);
+        }
+      })
+    ))
+  );
 });
 
 // Check whether to return cache or live data.
