@@ -1,13 +1,15 @@
+const version = 'v1';
+
 // Define static assets. These files will be cached.
 const assets = [
   './',
   './app.js',
-  './fallback.json'
+  './index.css',
 ];
 
-// Add static assets to cache.
 self.addEventListener('install', async event => {
-  const cache = await caches.open('app');
+  // Add static assets to cache.
+  const cache = await caches.open('app-' + version);
   cache.addAll(assets);
 });
 
@@ -19,27 +21,9 @@ self.addEventListener('fetch', event => {
   if (url.origin === location.origin) {
     event.respondWith(cacheFirst(event.request));
   }
-  else {
-    event.respondWith(networkFirst(event.request));
-  }
 });
 
 // If there's cache return it, else try to fetch.
 const cacheFirst = async request => {
   return await caches.match(request) || fetch(request);
-};
-
-// First try fetching, else check if there's cache.
-const networkFirst = async request => {
-  const cache = await caches.open('projects');
-
-  try {
-    const response = await fetch(request);
-    cache.put(request, response.clone());
-    return response;
-  }
-  catch (error) {
-    // Return cache when fetch fails. If there's no cache, return the fallback project.
-    return await caches.match(request) || await caches.match('./fallback.json');
-  }
 };

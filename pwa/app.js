@@ -1,8 +1,28 @@
 // Settings.
 const baseUrl = 'https://cmgt.hr.nl:8000/';
+const DB_NAME = 'cmgt';
+const DB_VERSION = 1;
+let db;
 
 // Register serviceworker and start app.
 window.addEventListener('load', () => {
+
+  // Create new indexedDB.
+  const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+  request.onupgradeneeded = e => {
+    console.log('IndexedDB:', 'Updating...');
+    request.result.createObjectStore('projects', { keyPath: '_id' });
+    request.result.createObjectStore('tags');
+  };
+
+  request.onsuccess = e => {
+    db = request.result;
+    console.log('IndexedDB:', 'Success.');
+  };
+  request.onerror = e => console.log('IndexedDB:', 'Error: ' + e.message);
+
+
   getTags();
   getProjects();
 
@@ -25,18 +45,59 @@ window.addEventListener('load', () => {
 
 // Get all projects and place them in the projects container.
 const getProjects = async (tag = '') => {
-  const res = await fetch(`${baseUrl}api/projects?tag=${tag}`);
-  const json = await res.json();
+  try {
+    const res = await fetch(`${baseUrl}api/projects?tag=${tag}`);
+    const json = await res.json();
 
-  document.getElementById('projects').innerHTML = json.projects.map(buildProject).join('\n');
+    console.log('IndexedDB:', 'Online, saving projects to DB...');
+    const transaction = db.transaction('projects', 'readwrite');
+    const projectOS = transaction.objectStore('projects');
+
+    json.projects.forEach(p => {
+      projectOS.add(p);
+    });
+  }
+  catch (e) {
+    console.log('IndexedDB:', 'Offline, getting projects from DB...');
+  }
+
+  const transaction = db.transaction('projects', 'readonly');
+  const projectOS = transaction.objectStore('projects');
+
+  projectOS.getAll().onsuccess = e => {
+    if (e.target.result.length) {
+      document.getElementById('projects').innerHTML = e.target.result.map(buildProject).join('\n');
+    }
+    else {
+      document.getElementById('projects').innerHTML = buildProject({fallback: true});
+    }
+  }
 };
 
 // Get all tags and place them in the tags container.
 const getTags = async () => {
-  const res = await fetch(`${baseUrl}api/projects/tags/`);
-  const json = await res.json();
+  try {
+    const res = await fetch(`${baseUrl}api/projects/tags/`);
+    const json = await res.json();
 
-  document.getElementById('tags').innerHTML += json.tags.map(buildTag).join('\n');
+    console.log('IndexedDB:', 'Online, saving tags to DB...');
+    const transaction = db.transaction('tags', 'readwrite');
+    const tagsOS = transaction.objectStore('tags');
+
+    json.tags.forEach(t => {
+      tagsOS.add(t, t);
+    });
+  }
+  catch (e) {
+    console.log('IndexedDB:', 'Offline, getting tags from DB...');
+  }
+
+  const transaction = db.transaction('tags', 'readonly');
+  const tagsOS = transaction.objectStore('tags');
+
+  tagsOS.getAll().onsuccess = e => {
+    document.getElementById('tags').innerHTML += e.target.result.map(buildTag).join('\n');
+  }
 };
 
 // Build the project HTML.
@@ -44,14 +105,14 @@ const buildProject = project => {
   if (project.fallback) {
     return `
       <div class="project">
-        <h2>${project.message}</h2>
+        <h2>Geen projecten gevonden.</h2>
       </div>
     `;
   }
   return `
     <div class="project">
       <h2>${project.title}</h2>
-      <div class="headerImage" style="background-image: url(${baseUrl}${project.headerImage})"></div>
+      <img class="headerImage" src="${baseUrl}${project.headerImage}" onerror="setPlaceholder(this)" />
       <p>${project.description}</p>
     </div>
   `;
@@ -63,4 +124,8 @@ const buildTag = tag => {
   return `
     <option value="${tag}">${capitalized}</option>
   `;
+};
+
+const setPlaceholder = img => {
+  img.src = './images/placeholder.gif';
 };
