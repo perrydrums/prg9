@@ -1,6 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View, Linking } from 'react-native';
-import { Constants, MapView, Location, Permissions } from 'expo';
+import { StyleSheet, Text, View, Linking, Button, AsyncStorage } from 'react-native';
+import { Constants, MapView, Location, Permissions, TaskManager } from 'expo';
 
 export default class App extends React.Component {
 
@@ -9,14 +9,52 @@ export default class App extends React.Component {
     permissions: false,
     locationResult: null,
     location: {coords: { latitude: null, longitude: null}},
+    fences: [],
   };
 
   componentDidMount() {
     this.permissionFlow();
+    this._getGeofences();
+    Location.startGeofencingAsync('task-geofencing', this.state.fences)
   }
 
   _handleMapRegionChange = mapRegion => {
     this.setState({ mapRegion });
+  };
+
+  _saveGeofences = async () => {
+    try {
+      await AsyncStorage.setItem('geofences', JSON.stringify(this.state.fences));
+    } catch (error) {
+      // Error saving data
+    }
+  };
+
+  _getGeofences = async () => {
+    try {
+      const value = await AsyncStorage.getItem('geofences');
+      if (value !== null) {
+        this.state.fences = JSON.parse(value);
+      }
+    } catch (error) {
+      // Error retrieving data
+    }
+  };
+
+  _addGeoFence = async () => {
+    // Get current location.
+    const location = await Location.getCurrentPositionAsync({});
+
+    // Save location.
+    this.state.fences.push(
+      {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        radius: 100,
+      }
+    );
+
+    this._saveGeofences();
   };
 
   permissionFlow = async () => {
@@ -27,13 +65,20 @@ export default class App extends React.Component {
       return;
     }
     else {
-      this.setState({permissions: true});
+      this.setState({ permissions: true });
     }
 
     const location = await Location.getCurrentPositionAsync({});
     this.setState({ locationResult: JSON.stringify(location), location, });
 
-    this.setState({mapRegion: { latitude: location.coords.latitude, longitude: location.coords.longitude, latitudeDelta: 0.0922, longitudeDelta: 0.0421 }});
+    this.setState({
+      mapRegion: {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      }
+    });
   };
 
   render() {
@@ -51,17 +96,29 @@ export default class App extends React.Component {
                   region={this.state.mapRegion}
                   onRegionChange={this._handleMapRegionChange}
                 >
-                  <MapView.Marker
-                    coordinate={this.state.location.coords}
-                    title="My Marker"
-                    description="Some description"
-                  />
+                  {this.state.fences.map((fence, i) => {
+                    return (
+                      <MapView.Marker
+                        coordinate={{latitude: fence.latitude, longitude: fence.longitude}}
+                        title="Geofence"
+                      />
+                    )
+                  })}
                 </MapView>
-
         }
+        <Button
+          title="Add Geo Fence"
+          onPress={this._addGeoFence}
+        />
       </View>
     );
   }
+}
+
+if (!TaskManager.isTaskRegisteredAsync('task-geofencing')) {
+  TaskManager.defineTask('task-geofencing', ({data, error}) => {
+
+  });
 }
 
 const styles = StyleSheet.create({
