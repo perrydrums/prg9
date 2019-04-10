@@ -18,7 +18,6 @@ export default class App extends React.Component {
     this.permissionFlowLocation();
 
     if (await this._getGeofences()) {
-      console.log('startGeofencingAsync!');
       Location.startGeofencingAsync('task-geofencing', this.state.fences);
     }
   }
@@ -39,6 +38,11 @@ export default class App extends React.Component {
     this.setState({ mapRegion });
   };
 
+  /**
+   * Save all geofences to storage.
+   *
+   * @returns {Promise<void>}
+   */
   _saveGeofences = async () => {
     try {
       await AsyncStorage.setItem('geofences', JSON.stringify(this.state.fences));
@@ -48,12 +52,16 @@ export default class App extends React.Component {
     }
   };
 
+  /**
+   * Get geofences from storage and update state.
+   *
+   * @returns {Promise<boolean>}
+   */
   _getGeofences = async () => {
     try {
       const value = await AsyncStorage.getItem('geofences');
       if (value !== null) {
         this.state.fences = JSON.parse(value);
-        console.log('Geofences Gotten!');
         return true;
       }
     } catch (error) {
@@ -61,6 +69,11 @@ export default class App extends React.Component {
     }
   };
 
+  /**
+   * Create a new geofence and update state.
+   *
+   * @returns {Promise<void>}
+   */
   _addGeoFence = async () => {
     // Get current location.
     const location = await Location.getCurrentPositionAsync({});
@@ -81,6 +94,11 @@ export default class App extends React.Component {
     this._saveGeofences();
   };
 
+  /**
+   * Ask for Location permission.
+   *
+   * @returns {Promise<void>}
+   */
   permissionFlowLocation = async () => {
     const { status } = await Permissions.askAsync(Permissions.LOCATION);
 
@@ -105,6 +123,11 @@ export default class App extends React.Component {
     });
   };
 
+  /**
+   * Ask for Notifications permission.
+   *
+   * @returns {Promise<void>}
+   */
   permissionFlowNotifications = async () => {
     const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
 
@@ -155,12 +178,16 @@ export default class App extends React.Component {
   }
 }
 
+/**
+ * Create background task to track location and geofence.
+ * Send notification or alert depending on app state.
+ */
 TaskManager.defineTask('task-geofencing', ({data: {eventType, region}, error}) => {
   if (error) {
     console.log('error defineTASK', error);
     return;
   }
-  console.log('TASK DEFINED!');
+
   if (eventType === Location.GeofencingEventType.Enter) {
 
     if (AppState.currentState === 'active') {
