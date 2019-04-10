@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, Linking, Button, AsyncStorage } from 'react-native';
+import { StyleSheet, Text, View, Linking, Button, AsyncStorage, Alert } from 'react-native';
 import { Constants, MapView, Location, Permissions, TaskManager } from 'expo';
 
 export default class App extends React.Component {
@@ -12,10 +12,13 @@ export default class App extends React.Component {
     fences: [],
   };
 
-  componentDidMount() {
+  async componentDidMount() {
+    // AsyncStorage.clear();
     this.permissionFlow();
-    this._getGeofences();
-    Location.startGeofencingAsync('task-geofencing', this.state.fences)
+    if (await this._getGeofences()) {
+      console.log('startGeofencingAsync!');
+      Location.startGeofencingAsync('task-geofencing', this.state.fences)
+    }
   }
 
   _handleMapRegionChange = mapRegion => {
@@ -25,6 +28,7 @@ export default class App extends React.Component {
   _saveGeofences = async () => {
     try {
       await AsyncStorage.setItem('geofences', JSON.stringify(this.state.fences));
+      this._getGeofences();
     } catch (error) {
       // Error saving data
     }
@@ -35,6 +39,8 @@ export default class App extends React.Component {
       const value = await AsyncStorage.getItem('geofences');
       if (value !== null) {
         this.state.fences = JSON.parse(value);
+        console.log('Geofences Gotten!');
+        return true;
       }
     } catch (error) {
       // Error retrieving data
@@ -46,13 +52,17 @@ export default class App extends React.Component {
     const location = await Location.getCurrentPositionAsync({});
 
     // Save location.
-    this.state.fences.push(
+    const newFences = this.state.fences.concat(
       {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-        radius: 100,
+        radius: 200,
       }
     );
+
+    this.setState({
+      fences: newFences
+    });
 
     this._saveGeofences();
   };
@@ -75,8 +85,8 @@ export default class App extends React.Component {
       mapRegion: {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
+        latitudeDelta: 0.008,
+        longitudeDelta: 0.004,
       }
     });
   };
@@ -95,10 +105,13 @@ export default class App extends React.Component {
                   style={{ alignSelf: 'stretch', height: 400 }}
                   region={this.state.mapRegion}
                   onRegionChange={this._handleMapRegionChange}
+                  showsUserLocation={true}
+                  showsMyLocationButton={true}
                 >
                   {this.state.fences.map((fence, i) => {
                     return (
                       <MapView.Marker
+                        key={i}
                         coordinate={{latitude: fence.latitude, longitude: fence.longitude}}
                         title="Geofence"
                       />
@@ -115,11 +128,20 @@ export default class App extends React.Component {
   }
 }
 
-if (!TaskManager.isTaskRegisteredAsync('task-geofencing')) {
-  TaskManager.defineTask('task-geofencing', ({data, error}) => {
-
-  });
-}
+TaskManager.defineTask('task-geofencing', ({data: {eventType, region}, error}) => {
+  if (error) {
+    console.log('error defineTASK', error);
+    return;
+  }
+  console.log('TASK DEFINED!');
+  if (eventType === Location.GeofencingEventType.Enter) {
+    Alert.alert('ENTER', 'Entered Region');
+    console.log("You've entered region:", region);
+  } else if (eventType === Location.GeofencingEventType.Exit) {
+    Alert.alert('LEFT', 'Left Region');
+    console.log("You've left region:", region);
+  }
+});
 
 const styles = StyleSheet.create({
   container: {
