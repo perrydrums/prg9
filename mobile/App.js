@@ -1,12 +1,13 @@
 import React from 'react';
-import { StyleSheet, Text, View, Linking, Button, AsyncStorage, Alert } from 'react-native';
-import { Constants, MapView, Location, Permissions, TaskManager } from 'expo';
+import { StyleSheet, Text, View, Linking, Button, AsyncStorage, Alert, AppState } from 'react-native';
+import { Constants, MapView, Location, Permissions, TaskManager, Notifications } from 'expo';
 
 export default class App extends React.Component {
 
   state = {
     mapRegion: null,
     permissions: false,
+    notifications: false,
     locationResult: null,
     location: {coords: { latitude: null, longitude: null}},
     fences: [],
@@ -14,12 +15,25 @@ export default class App extends React.Component {
 
   async componentDidMount() {
     // AsyncStorage.clear();
-    this.permissionFlow();
+    this.permissionFlowLocation();
+
     if (await this._getGeofences()) {
       console.log('startGeofencingAsync!');
-      Location.startGeofencingAsync('task-geofencing', this.state.fences)
+      Location.startGeofencingAsync('task-geofencing', this.state.fences);
     }
   }
+
+  componentWillMount() {
+    this.permissionFlowNotifications();
+    this.listener = Notifications.addListener(this.listen);
+  }
+  componentWillUnmount() {
+    this.listener = Notifications.removeListener(this.listen);
+  }
+
+  listen = ({origin, data}) => {
+    console.log('data', origin, data);
+  };
 
   _handleMapRegionChange = mapRegion => {
     this.setState({ mapRegion });
@@ -67,7 +81,7 @@ export default class App extends React.Component {
     this._saveGeofences();
   };
 
-  permissionFlow = async () => {
+  permissionFlowLocation = async () => {
     const { status } = await Permissions.askAsync(Permissions.LOCATION);
 
     if (status !== 'granted') {
@@ -89,6 +103,19 @@ export default class App extends React.Component {
         longitudeDelta: 0.004,
       }
     });
+  };
+
+  permissionFlowNotifications = async () => {
+    const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
+
+    if (status !== 'granted') {
+      Linking.openURL('app-settings:');
+      return;
+    }
+
+    this.setState({ notifications: true });
+    const token = await Notifications.getExpoPushTokenAsync();
+    console.log('token', token)
   };
 
   render() {
@@ -135,10 +162,31 @@ TaskManager.defineTask('task-geofencing', ({data: {eventType, region}, error}) =
   }
   console.log('TASK DEFINED!');
   if (eventType === Location.GeofencingEventType.Enter) {
-    Alert.alert('ENTER', 'Entered Region');
+
+    if (AppState.currentState === 'active') {
+      Alert.alert('Hello!', 'You entered the area!');
+    }
+    else {
+      Notifications.presentLocalNotificationAsync({
+        title: 'Hello!',
+        body: 'You entered the area!',
+      });
+    }
+
     console.log("You've entered region:", region);
-  } else if (eventType === Location.GeofencingEventType.Exit) {
-    Alert.alert('LEFT', 'Left Region');
+  }
+  else if (eventType === Location.GeofencingEventType.Exit) {
+
+    if (AppState.currentState === 'active') {
+      Alert.alert('Byebye!', 'You left the area!');
+    }
+    else {
+      Notifications.presentLocalNotificationAsync({
+        title: 'Byebye!',
+        body: 'You left the area!',
+      });
+    }
+
     console.log("You've left region:", region);
   }
 });
